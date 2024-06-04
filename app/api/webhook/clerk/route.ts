@@ -46,7 +46,7 @@ export async function POST(req: Request) {
 
   try {
     if (eventType === 'user.created') {
-      const { id, email_addresses, image_url, first_name, last_name, username } = evt.data;
+      const { id, email_addresses, image_url, first_name, last_name, username, public_metadata } = evt.data;
 
       const user = {
         clerkId: id,
@@ -55,6 +55,11 @@ export async function POST(req: Request) {
         firstName: first_name,
         lastName: last_name,
         photo: image_url,
+        metadata: {
+          github: public_metadata.github || null,
+          email: public_metadata.email || email_addresses[0].email_address,
+          google: public_metadata.google || null,
+        }
       };
 
       const newUser = await createUser(user);
@@ -63,6 +68,9 @@ export async function POST(req: Request) {
         await clerkClient.users.updateUserMetadata(id, {
           publicMetadata: {
             userId: newUser._id,
+            github: user.metadata.github,
+            email: user.metadata.email,
+            google: user.metadata.google,
           },
         });
       }
@@ -71,13 +79,18 @@ export async function POST(req: Request) {
     }
 
     if (eventType === 'user.updated') {
-      const { id, image_url, first_name, last_name, username } = evt.data;
+      const { id, image_url, first_name, last_name, username, public_metadata } = evt.data;
 
       const user = {
         firstName: first_name,
         lastName: last_name,
         username: username!,
         photo: image_url,
+        metadata: {
+          github: public_metadata.github || null,
+          email: public_metadata.email || null,
+          google: public_metadata.google || null,
+        }
       };
 
       const updatedUser = await updateUser(id, user);
