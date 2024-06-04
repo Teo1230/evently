@@ -56,9 +56,9 @@ export async function POST(req: Request) {
         lastName: last_name,
         photo: image_url,
         metadata: {
-          github: public_metadata.github || null,
-          email: public_metadata.email || email_addresses[0].email_address,
-          google: public_metadata.google || null,
+          github: public_metadata?.github || null,
+          email: public_metadata?.email || email_addresses[0].email_address,
+          google: public_metadata?.google || null,
         }
       };
 
@@ -87,13 +87,21 @@ export async function POST(req: Request) {
         username: username!,
         photo: image_url,
         metadata: {
-          github: public_metadata.github || null,
-          email: public_metadata.email || null,
-          google: public_metadata.google || null,
+          github: public_metadata?.github || null,
+          email: public_metadata?.email || null,
+          google: public_metadata?.google || null,
         }
       };
 
       const updatedUser = await updateUser(id, user);
+
+      await clerkClient.users.updateUserMetadata(id, {
+        publicMetadata: {
+          github: user.metadata.github,
+          email: user.metadata.email,
+          google: user.metadata.google,
+        },
+      });
 
       return NextResponse.json({ message: 'OK', user: updatedUser });
     }
