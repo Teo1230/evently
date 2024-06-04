@@ -93,7 +93,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: 'OK', user: deletedUser });
     }
   } catch (error) {
-    console.error(Error handling event ${eventType}:, error);
+   
     return new Response('Error processing event', {
       status: 500,
     });
