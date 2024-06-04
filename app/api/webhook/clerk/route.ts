@@ -18,9 +18,8 @@ export async function POST(req: Request) {
   const svix_signature = headerPayload.get('svix-signature');
 
   if (!svix_id || !svix_timestamp || !svix_signature) {
-    return new Response('Error occurred -- no svix headers', {
-      status: 400,
-    });
+    console.error('Missing svix headers');
+    return new Response('Error occurred -- no svix headers', { status: 400 });
   }
 
   const payload = await req.json();
@@ -37,9 +36,7 @@ export async function POST(req: Request) {
     }) as WebhookEvent;
   } catch (err) {
     console.error('Error verifying webhook:', err);
-    return new Response('Error occurred', {
-      status: 400,
-    });
+    return new Response('Error occurred', { status: 400 });
   }
 
   const eventType = evt.type;
@@ -47,6 +44,7 @@ export async function POST(req: Request) {
   try {
     if (eventType === 'user.created') {
       const { id, email_addresses, image_url, first_name, last_name, username } = evt.data;
+      console.log('User created event received:', evt.data);
 
       const user = {
         clerkId: id,
@@ -60,12 +58,14 @@ export async function POST(req: Request) {
       const newUser = await createUser(user);
 
       if (newUser) {
-        console.log(newUser._id)
+        console.log('New user created:', newUser._id);
         await clerkClient.users.updateUserMetadata(id, {
           publicMetadata: {
             userId: newUser._id,
           },
         });
+      } else {
+        console.error('Failed to create new user');
       }
 
       return NextResponse.json({ message: 'OK', user: newUser });
@@ -73,6 +73,7 @@ export async function POST(req: Request) {
 
     if (eventType === 'user.updated') {
       const { id, image_url, first_name, last_name, username } = evt.data;
+      console.log('User updated event received:', evt.data);
 
       const user = {
         firstName: first_name,
@@ -82,23 +83,20 @@ export async function POST(req: Request) {
       };
 
       const updatedUser = await updateUser(id, user);
-
       return NextResponse.json({ message: 'OK', user: updatedUser });
     }
 
     if (eventType === 'user.deleted') {
       const { id } = evt.data;
+      console.log('User deleted event received:', evt.data);
 
       const deletedUser = await deleteUser(id!);
-
       return NextResponse.json({ message: 'OK', user: deletedUser });
     }
   } catch (error) {
-   
-    return new Response('Error processing event', {
-      status: 500,
-    });
+    console.error('Error processing event:', error);
+    return new Response('Error processing event', { status: 500 });
   }
 
-  return new Response('', { status: 200 });
+  return new Response('', { status: 200 });
 }
