@@ -46,20 +46,15 @@ export async function POST(req: Request) {
 
   try {
     if (eventType === 'user.created') {
-      const { id, email_addresses, image_url, first_name, last_name, username, public_metadata } = evt.data;
+      const { id, email_addresses, image_url, first_name, last_name, username } = evt.data;
 
       const user = {
         clerkId: id,
-        email: email_addresses[0].email_address,
-        username: username!,
-        firstName: first_name,
-        lastName: last_name,
-        photo: image_url,
-        metadata: {
-          github: public_metadata?.github || null,
-          email: public_metadata?.email || email_addresses[0].email_address,
-          google: public_metadata?.google || null,
-        }
+        email: email_addresses[0]?.email_address || '', // Handle missing email
+        username: username || '', // Handle missing username
+        firstName: first_name || '', // Handle missing first name
+        lastName: last_name || '', // Handle missing last name
+        photo: image_url || '', // Handle missing image URL
       };
 
       const newUser = await createUser(user);
@@ -68,9 +63,6 @@ export async function POST(req: Request) {
         await clerkClient.users.updateUserMetadata(id, {
           publicMetadata: {
             userId: newUser._id,
-            github: user.metadata.github,
-            email: user.metadata.email,
-            google: user.metadata.google,
           },
         });
       }
@@ -79,29 +71,16 @@ export async function POST(req: Request) {
     }
 
     if (eventType === 'user.updated') {
-      const { id, image_url, first_name, last_name, username, public_metadata } = evt.data;
+      const { id, image_url, first_name, last_name, username } = evt.data;
 
       const user = {
-        firstName: first_name,
-        lastName: last_name,
-        username: username!,
-        photo: image_url,
-        metadata: {
-          github: public_metadata?.github || null,
-          email: public_metadata?.email || null,
-          google: public_metadata?.google || null,
-        }
+        firstName: first_name || '', // Handle missing first name
+        lastName: last_name || '', // Handle missing last name
+        username: username || '', // Handle missing username
+        photo: image_url || '', // Handle missing image URL
       };
 
       const updatedUser = await updateUser(id, user);
-
-      await clerkClient.users.updateUserMetadata(id, {
-        publicMetadata: {
-          github: user.metadata.github,
-          email: user.metadata.email,
-          google: user.metadata.google,
-        },
-      });
 
       return NextResponse.json({ message: 'OK', user: updatedUser });
     }
@@ -109,7 +88,7 @@ export async function POST(req: Request) {
     if (eventType === 'user.deleted') {
       const { id } = evt.data;
 
-      const deletedUser = await deleteUser(id!);
+      const deletedUser = await deleteUser(id);
 
       return NextResponse.json({ message: 'OK', user: deletedUser });
     }
@@ -122,6 +101,3 @@ export async function POST(req: Request) {
 
   return new Response('', { status: 200 });
 }
-
-
-//ceva
