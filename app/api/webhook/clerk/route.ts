@@ -82,14 +82,6 @@ export async function POST(req: Request) {
 
       const updatedUser = await updateUser(id, user);
 
-      if (updatedUser) {
-        await clerkClient.users.updateUserMetadata(id, {
-          publicMetadata: {
-            userId: updatedUser._id,
-          },
-        });
-      }
-
       return NextResponse.json({ message: 'OK', user: updatedUser });
     }
 
@@ -98,22 +90,14 @@ export async function POST(req: Request) {
 
       const deletedUser = await deleteUser(id!);
 
-      if (deletedUser) {
-        await clerkClient.users.updateUserMetadata(id, {
-          publicMetadata: {
-            userId: null,
-          },
-        });
-      }
-
       return NextResponse.json({ message: 'OK', user: deletedUser });
     }
   } catch (error) {
-    console.error(`Error handling event ${eventType}:`, error);
+    console.error(Error handling event ${eventType}:, error);
     return new Response('Error processing event', {
       status: 500,
     });
   }
 
-  return new Response('', { status: 200 });
+  return new Response('', { status: 200 });
 }
